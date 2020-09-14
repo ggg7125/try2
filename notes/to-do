@@ -1,0 +1,8 @@
+i need to "sign the app" as explained here or Windows will give people many problems trying to run it: https://github.com/electron/electron/blob/v10.1.1/docs/tutorial/code-signing.md
+
+it would be nice if my program runs out of sight in the trays instead of always on the taskbar (like Gyazo, Tuxler, Myst, etc)
+
+electron can detect if internet is online/offline which we can use to know if our bot should pause itself until internet comes back on
+https://github.com/electron/electron/blob/v10.1.1/docs/tutorial/online-offline-events.md
+
+electron can send desktop notifications so i could use them to show the user their trades https://github.com/electron/electron/blob/v10.1.1/docs/tutorial/notifications.md

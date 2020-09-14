@@ -1,0 +1,2 @@
+yarn electron:build -p always
+will send our packaged electron files to our github Releases. old versions of our app are set to update themselves to the latest version there using auto-updates
