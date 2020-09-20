@@ -3,6 +3,6 @@ vue create my-app
 cd my-app
 vue add electron-builder
 ...then you end up pretty much with this project
-but then you have to add electron-updater as well. in background.js: import { autoUpdater } from "electron-updater";
+but then you have to add electron-updater as well. in the main electron script: import { autoUpdater } from "electron-updater";
 then add autoUpdater.checkForUpdatesAndNotify(); there too, below the already existing line of win.loadURL("app://./index.html");
 there are online instructions for electron-updater if something is missing
