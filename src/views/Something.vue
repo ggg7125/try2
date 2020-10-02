@@ -1,63 +1,63 @@
 <template>
   <div class="something">
-    <h1>This is a something page</h1>
     <button class="my-button" @click.prevent="handleClick">
-      <slot></slot>
-      Clicks: {{ count }}</button
-    ><br />
-    Enter text:<input type="text" v-model="inputText" id="text1" /><br />
-    Something: <input type="checkbox" /><br />
-    Number: <input type="number" /><br />
-    Something: <input type="radio" /><br />
-    Something <input type="range" id="idk" /><br />
-    <SomeComponent msg="some message" />
+      Clicks: {{ store.clickCount }}
+    </button>
+    <label>Setting 1: </label>
+    <input type="text" v-model="inputText" id="text1" /><br />
+    Setting 2: <input type="checkbox" /><br />
+    Setting 3: <input type="number" /><br />
+    Setting 4: <input type="radio" /><br />
+    Setting 5: <input type="range" id="idk" /><br />
   </div>
 </template>
 
 <script>
-import SomeComponent from "@/components/SomeComponent.vue";
-
 export default {
-  components: {
-    SomeComponent
-  },
   data() {
     return {
-      count: 0,
-      inputText: "hello"
+      inputText: "hello",
+      store: this.$root.$root.$data.store
     };
   },
   methods: {
     handleClick() {
-      this.count++;
-      console.log(`clicked ${this.count}`);
+      this.store.clickCount++;
     }
   }
 };
 </script>
 
 <style scoped>
+* {
+  text-align: left;
+  padding: 0px;
+  border: 0px;
+  margin: 0px;
+}
+.something {
+  margin-left: 30vw;
+}
 .my-button {
-  display: inline-block;
+  display: block;
   font-size: 1rem;
-  color: #fff;
+  color: rgb(255, 255, 255);
   background-color: #3eaf7c;
   padding: 0.8rem 1.6rem;
-  margin: 5px;
-  border-radius: 4px;
-  transition: background-color 0.1s ease;
-  box-sizing: border-box;
+  border-radius: 10px;
+  transition: background-color 0.3s;
 }
-input[type="text"] {
-  display: inline-block;
+.my-button:hover {
+  background-color: rgb(0, 125, 0);
+}
+input[type="text"],
+input[type="number"] {
+  display: inline;
   font-size: 1rem;
-  color: #fff;
+  color: rgb(255, 255, 255);
   background-color: #3eaf7c;
-  padding: 0.65rem 1rem;
-  margin: 5px;
+  padding: 0.5rem 1rem;
   border-radius: 15px;
-  transition: background-color 0.1s ease;
-  box-sizing: border-box;
-  border: 5px solid #000000;
+  border: 2px solid #000000;
 }
 </style>

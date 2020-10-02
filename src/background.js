@@ -1,10 +1,12 @@
 "use strict";
 
-import { app, protocol, BrowserWindow } from "electron";
+import { app, protocol, BrowserWindow, ipcMain } from "electron";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import { autoUpdater } from "electron-updater";
 const isDevelopment = process.env.NODE_ENV !== "production";
+
+import * as binance from "./binance.js";
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -23,8 +25,12 @@ function createWindow() {
     webPreferences: {
       // Use pluginOptions.nodeIntegration, leave this alone
       // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
-      nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
-      webSecurity: false
+      // nodeIntegration: process.env.ELECTRON_NODE_INTEGRATION,
+      nodeIntegration: true,
+      webSecurity: false,
+      enableRemoteModule: true,
+      nodeIntegrationInWorker: true,
+      nodeIntegrationInSubFrames: true
     }
   });
 
@@ -43,6 +49,26 @@ function createWindow() {
     win = null;
   });
 }
+
+ipcMain.on("api-key-update", (event, data) => {
+  binance.setApiKey(data.newValue);
+  console.log(`apiKey value changed to: ${binance.apiKey}`);
+});
+
+ipcMain.on("api-secret-update", (event, data) => {
+  binance.setApiSecret(data.newValue);
+  console.log(`apiSecret value changed to: ${binance.apiSecret}`);
+});
+
+ipcMain.on("asynchronous-message", (event, arg) => {
+  console.log(arg);
+  event.sender.send("asynchronous-reply", "async pong");
+});
+
+ipcMain.on("synchronous-message", (event, arg) => {
+  console.log(arg);
+  event.returnValue = "sync pong";
+});
 
 // Quit when all windows are closed.
 app.on("window-all-closed", () => {

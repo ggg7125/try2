@@ -105,6 +105,11 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+* {
+  padding: 0px;
+  border: 0px;
+  margin: 0px;
+}
 h3 {
   margin: 40px 0 0;
 }

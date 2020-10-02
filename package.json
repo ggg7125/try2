@@ -13,6 +13,8 @@
     "postuninstall": "electron-builder install-app-deps"
   },
   "dependencies": {
+    "binance-api-node": "^0.10.7",
+    "colors": "^1.4.0",
     "core-js": "^3.6.5",
     "electron-updater": "^4.3.4",
     "vue": "^2.6.11",

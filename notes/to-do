@@ -1,3 +1,10 @@
+when we spawn the browser window make its size be screen width * 0.75 and screen height * 0.75 so its relativized to whatever resolution theyre on
+
+perhaps use localStorage and/or sessionStorage for storing our data that we need to save, such as user settings
+OR use indexedDB which is a clientside database. the indexedDB docs on this url (https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) even say it is too
+complex for simple purposes and recommends some alternatives by name so check that out, and this link (https://home.aveek.io/blog/post/get-started-with-svelte/) recommends using this npm module "idb-keyval" which is a simpler wrapper for indexedDB
+SEMI-RELATED: there's also https://github.com/robinvdvleuten/vuex-persistedstate which is a vuex plugin that makes sure the vuex datastore keeps its values on page reloads, so you gotta use vuex
+
 i need to "sign the app" as explained here or Windows will give people many problems trying to run it: https://github.com/electron/electron/blob/v10.1.1/docs/tutorial/code-signing.md
 
 it would be nice if my program runs out of sight in the trays instead of always on the taskbar (like Gyazo, Tuxler, Myst, etc)

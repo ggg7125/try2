@@ -9,6 +9,12 @@
   </div>
 </template>
 
+<script>
+const { ipcRenderer } = window.require("electron"); // anticipated future use and to remember it can be used here
+
+export default {};
+</script>
+
 <style>
 * {
   padding: 0px;

@@ -1,2 +1,17 @@
 yarn electron:build -p always
 will send our packaged electron files to our github Releases. old versions of our app are set to update themselves to the latest version there using auto-updates
+
+CSS:
+an html element can have multiple classes so long as you separate them by spaces:
+<button class="btn btn-1">
+then in CSS "btn" is your "base button" style that all buttons share, and btn-1 is a more specific style for probably just that specific button
+btn {
+    something: 5,
+}
+btn-1 {
+    something: 6,
+    something2: 7,
+}
+this is just inheritance for html
+
+the css tutorial guy says he almost never uses ids and uses class instead for everything because class does everything id does except you can do multiple classes and inheritance.
