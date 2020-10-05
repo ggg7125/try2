@@ -5,10 +5,22 @@ import router from "./router";
 const { ipcRenderer } = window.require("electron");
 console.log(ipcRenderer.sendSync("synchronous-message", "sync ping"));
 
-// TODO: WARNING: botRunning is not actually dynamically set anywhere right now, it has no connection to whether binance.started is true or false. we need to keep botRunning equal to binance.started, but currently there is no code to do that, so it must be added for this match binance.started, and then background.js must fire this event so that this listener will know it changed and update it accordingly
 ipcRenderer.on("bot-running-change", (event, data) => {
   console.log("status of bot running has changed");
   store.botRunning = data;
+});
+
+ipcRenderer.on("load-settings", (event, data) => {
+  store.settings = data;
+});
+
+ipcRenderer.on("bot-start-status", (event, data) => {
+  console.log(`bot start status changed to ${data}`);
+  store.botRunning = data;
+});
+
+ipcRenderer.on(`console-log`, (event, data) => {
+  console.log(data); // TODO: we dont really want to console log this, we want to show it in our own logging element on the frontend that looks nice for the user to see
 });
 
 ipcRenderer.on("asynchronous-reply", (event, arg) => {
@@ -22,21 +34,28 @@ Vue.config.productionTip = false;
 // this is a simple way to keep a store without needing Vuex because Vuex itself says its for more complicated purposes. all info here: https://vuejs.org/v2/guide/state-management.html#Simple-State-Management-from-Scratch
 let store = {
   clickCount: 0,
-  apiKey: "",
-  apiSecret: "",
-  botRunning: false
+  botRunning: false,
+  // settings are kept in a separate object so we can save the entire object to file
+  settings: {
+    apiKey: "",
+    apiSecret: ""
+  }
 };
+
+ipcRenderer.send("send-initial-settings", store.settings);
 
 new Vue({
   data: {
     store: store // since this is the main Vue instance and root of all vue components, all vue components will have access to its data via this.$root.$data.store etc or for even deeper subcomponenents its this.$root.$root.data.store etc
   },
   watch: {
-    "store.apiKey": function(newValue, oldValue) {
+    "store.settings.apiKey": function(newValue, oldValue) {
       ipcRenderer.send("api-key-update", { newValue, oldValue });
+      ipcRenderer.send("settings-changed", this.store.settings);
     },
-    "store.apiSecret": function(newValue, oldValue) {
+    "store.settings.apiSecret": function(newValue, oldValue) {
       ipcRenderer.send("api-secret-update", { newValue, oldValue });
+      ipcRenderer.send("settings-changed", this.store.settings);
     }
   },
   router,

@@ -1,6 +1,6 @@
 <template>
   <div class="settings-container">
-    <div v-if="store.botRunning == true">
+    <div v-if="store.botRunning == false">
       <div class="top-text">
         Remember to stop the bot if you wish to change settings.<br />
         Only well thought out settings will be profitable. Otherwise they could
@@ -12,13 +12,13 @@
           <label>API Key: </label>
           <input
             type="text"
-            v-model="store.apiKey"
+            v-model="store.settings.apiKey"
             placeholder="Put your API Key from Binance.com here"
           /><br />
           <label>API Secret: </label>
           <input
             type="text"
-            v-model="store.apiSecret"
+            v-model="store.settings.apiSecret"
             placeholder="Put your API Secret from Binance.com here"
           /><br />
         </div>

@@ -13,6 +13,8 @@ module.exports = {
     "no-constant-condition": "off",
     "no-unused-vars": "off",
     "max-len": "off",
-    "object-curly-spacing": "off"
+    "object-curly-spacing": "off",
+    "multiline-ternary": "off",
+    "brace-style": "off"
   }
 };
