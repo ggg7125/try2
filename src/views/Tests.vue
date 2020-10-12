@@ -13,6 +13,8 @@
 </template>
 
 <script>
+const colors = require("colors");
+
 export default {
   data() {
     return {

@@ -10,7 +10,8 @@
 </template>
 
 <script>
-const { ipcRenderer } = window.require("electron"); // anticipated future use and to remember it can be used here
+const { ipcRenderer } = window.require("electron");
+const colors = require("colors");
 
 export default {};
 </script>

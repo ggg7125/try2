@@ -1,4 +1,10 @@
-finish stop/start button functionality
+output element auto scroll down when new text added
+use this: https://github.com/theomessin/vue-chat-scroll
+if that doesnt work check these:
+https://stackoverflow.com/questions/40730116/scroll-to-bottom-of-div-with-vue-js
+https://jsfiddle.net/my54bhwn
+
+remove all the "".someColor things from binance.js from the colors module
 
 add more user settings fields that assign to variables in binance.js
 

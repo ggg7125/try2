@@ -1,32 +1,21 @@
+const colors = require("colors");
 import { app, protocol, BrowserWindow, ipcMain } from "electron";
 import { createProtocol } from "vue-cli-plugin-electron-builder/lib";
 import installExtension, { VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import { autoUpdater } from "electron-updater";
 import { v4 } from "uuid";
-// import * as binance from "./binance.js";
 let binance = require("./binance.js");
 import * as fs from "fs";
 
 const isDevelopment = process.env.NODE_ENV !== "production";
 
-async function Test() {
-  while (true) {
-    await sleep(2000);
-    // app.relaunch();
-    // app.exit() // there is also app.quit which attempts to exit but may not in certain cases, see docs. it also has events it fires
-
-    binance.DeleteModule();
-    delete require.cache[require.resolve("./binance.js")];
-    binance = require("./binance.js");
-    console.log(binance.testVar);
-  }
+function SetupBinanceListeners() {
+  binance.mainEmitter.on(`console-log`, function(data) {
+    win.webContents.send(`console-log`, data); //forward to frontend
+  });
 }
 
-Test();
-
-binance.mainEmitter.on(`console-log`, function(data) {
-  win.webContents.send(`console-log`, data[0]); //forward to frontend
-});
+SetupBinanceListeners();
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -92,6 +81,11 @@ function StartBot() {
 function StopBot() {
   binance.StopBot();
   win.webContents.send("bot-start-status", false);
+  binance.DeleteModule();
+  delete require.cache[require.resolve("./binance.js")]; // delete the cached module
+  binance = require("./binance.js"); // ...so that when we call require() now it will give us a new instance instead of the cached instance
+  SetupBinanceListeners(); // listeners to the old module get cleared, so gotta recreate them
+  binance.Initialize(); // we must call this here because the event "frontend-loaded" that would normally allow binance to start this function on its own has already fired on app startup and wont be firing again
   console.log(`StopBot()`);
 }
 

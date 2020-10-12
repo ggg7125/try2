@@ -1,26 +1,35 @@
-export let testVar = Math.random();
+console.log(`BINANCE.JS LOADED`);
 
 const EventEmitter = require(`events`);
 export var mainEmitter = new EventEmitter();
 
 let deleted = false;
 
-export function DeleteModule() {
+export async function DeleteModule() {
+  if (deleted) return;
   mainEmitter.removeAllListeners();
   deleted = true;
-  //etc
+  started = false;
 }
 
-function customLog() {
-  for (let i = 0; i < arguments.length; i++) {
-    console.log(arguments[i]);
-  }
-  mainEmitter.emit(`console-log`, arguments);
+// function customLog() {
+//   if(deleted) return
+//   for (let i = 0; i < arguments.length; i++) {
+//     console.log(arguments[i]);
+//   }
+//   mainEmitter.emit(`console-log`, arguments);
+// }
+
+function customLog(text, color) {
+  if (deleted) return;
+  console.log(text);
+  mainEmitter.emit(`console-log`, { text, color });
 }
 
 let frontendLoaded = false;
 
 mainEmitter.on(`did-finish-load`, function(data) {
+  if (deleted) return;
   frontendLoaded = true;
   Initialize();
 });
@@ -28,7 +37,9 @@ mainEmitter.on(`did-finish-load`, function(data) {
 export let started = false;
 
 export function StartBot() {
+  if (deleted) return;
   started = true;
+  console.log(`binance.StartBot()`);
 }
 
 export function StopBot() {
@@ -42,10 +53,12 @@ export let apiSecret =
 
 // changing variables in the module from other scripts doesnt seem to work, says its read only, idk why, so i made setter functions
 export function setApiKey(value) {
+  if (deleted) return;
   apiKey = value;
 }
 export function setApiSecret(value) {
   apiSecret = value;
+  if (deleted) return;
 }
 
 /*
@@ -242,10 +255,17 @@ const errors = {
   insufficientFunds: "insufficient funds"
 };
 
-async function Initialize() {
+let initialized = false;
+
+export async function Initialize() {
+  if (initialized) return;
+  initialized = true;
+  frontendLoaded = true; // the frontend is implied to be loaded if this function is being called by anywhere
+  if (deleted) return;
   await sleep(5000);
   LoadHistory();
   while (!started) {
+    if (deleted) return;
     await sleep(100);
   }
   await sleep(100);
@@ -257,16 +277,19 @@ async function Initialize() {
   await sleep(5000);
   await Backtesting();
   BacktestingLoop(); //. this is because on the rare chance it finds every single pair currently untradable, for example everything is crashing, it will stop the entire bot because the only time it'll ever reevaluate the backtesting is when a sell order goes through. but that would never happen if all pairs are deemed untradeable. so we make this occur every hour or so regardless just in case.
-  customLog(`Trading begins in 5 seconds...`.yellow);
+  customLog(`Trading begins in 5 seconds...`);
   await sleep(5000);
   for (let pair of pairs) {
+    if (deleted) return;
     TradeLoop(pair);
     await sleep(1500);
   }
 }
 
 async function BacktestingLoop() {
+  if (deleted) return;
   while (true) {
+    if (deleted) return;
     await sleep(1 * 60 * 60 * 1000);
     TryBacktesting(true);
   }
@@ -327,7 +350,7 @@ function QuantityDecimals(pair, quantity) {
     }
     break;
   }
-  customLog(`QuantityDecimals() NOT FOUND for ${pair}`.yellow);
+  customLog(`QuantityDecimals() NOT FOUND for ${pair}`);
 }
 
 //. same but for price
@@ -362,7 +385,9 @@ let exchangeInfo;
 let coinRules = [];
 
 async function ExchangeInfo() {
+  if (deleted) return;
   while (true) {
+    if (deleted) return;
     exchangeInfo = await client.exchangeInfo();
     if (exchangeInfo) {
       for (let symbol of exchangeInfo.symbols) {
@@ -380,6 +405,7 @@ async function ExchangeInfo() {
 let histories = [];
 
 function LoadHistory() {
+  if (deleted) return;
   customLog(`${pairs.length} coins in coin list`);
   let totalProfits = 0;
   let pairsCounted = 0;
@@ -405,21 +431,22 @@ function LoadHistory() {
         `${pair} history loaded (all time profit of ${roundTo(
           profitDisplay,
           0.01
-        )}% from ${allTimeTrades} trades since ${history[0].date})`.cyan
+        )}% from ${allTimeTrades} trades since ${history[0].date})`
       );
     }
   }
   customLog(
     `Additive profit across all ${pairsCounted} traded pairs: ${totalProfits.toFixed(
       2
-    )}%`.green
+    )}%`,
+    "rgb(255,160,0)"
   );
   customLog(
     `Average profit per pair: ${(totalProfits / pairsCounted).toFixed(2)}%`
       .green
   );
-  customLog(`Total trades: ${totalTradeCount}`.green);
-  customLog(`Losing trades: ${historicalLosingTrades}`.green);
+  customLog(`Total trades: ${totalTradeCount}`);
+  customLog(`Losing trades: ${historicalLosingTrades}`);
 }
 
 //. it only saves history of successful sells by the way, because its purpose is to tell you how much you've profit in the past x days
@@ -469,7 +496,7 @@ function DisplayAverageProfit(pair, days) {
   customLog(
     `${days} days ${pair} compounded profit: ${Number(
       compoundedPercent
-    ).toFixed(3)}% from ${count} trades`.cyan
+    ).toFixed(3)}% from ${count} trades`
   );
 }
 
@@ -553,23 +580,23 @@ function GetVolatility(candles, balance) {
 }
 
 async function Backtesting(silent) {
+  if (deleted) return;
   if (MLinProgress) return;
   MLinProgress = true;
   lastML = Date.now();
   if (silent)
-    customLog(
-      `Backtesting in progress... (silent results). ${GetDate()}`.yellow
-    );
-  else customLog(`Backtesting in progress... ${GetDate()}`.yellow);
+    customLog(`Backtesting in progress... (silent results). ${GetDate()}`);
+  else customLog(`Backtesting in progress... ${GetDate()}`);
   if (!silent) lastNonSilentML = Date.now();
   let deferredTradeParamsToUpdate = [];
   for (let pair of pairs) {
+    if (deleted) return;
     let _pair = pair.replace("_", "");
     //. check that this coin has the minimum volume that is required to trade it
     let dailyStats = await DailyStats(pair);
     if (dailyStats.quoteVolume && dailyStats.quoteVolume < minVolume) {
       if (!silent)
-        customLog(`volume on ${pair} is below the minimum of ${minVolume}.`);
+        customLog(`volume on ${pair} is below the minimum of $${minVolume}.`);
       SetTradeable(pair, false);
       continue;
     }
@@ -591,9 +618,9 @@ async function Backtesting(silent) {
     let candles = await GetCandles(_pair, candleType, candleCount);
 
     // let someCandles = await GetCandles(_pair, '15m', 1000)
-    // customLog(`${pair} Volatility: ${GetVolatility(someCandles, 0.5).toFixed(2)}%`.red)
-    // customLog(`${pair} Volatility: ${GetVolatility(someCandles, 1.0).toFixed(2)}%`.red)
-    // customLog(`${pair} Volatility: ${GetVolatility(someCandles, 0.0).toFixed(2)}%`.red)
+    // customLog(`${pair} Volatility: ${GetVolatility(someCandles, 0.5).toFixed(2)}%`)
+    // customLog(`${pair} Volatility: ${GetVolatility(someCandles, 1.0).toFixed(2)}%`)
+    // customLog(`${pair} Volatility: ${GetVolatility(someCandles, 0.0).toFixed(2)}%`)
 
     //. customizable
     let SMAtolerance = 0.01; //0.968 //. example: if 0.9, it wont trade this coin if the price is 10% or more below the SMA, because it considers that a crash, it doesnt want to trade during crashing conditions, or even significantly downtrending conditions
@@ -673,6 +700,7 @@ async function Backtesting(silent) {
     let buyAnywayMinProfit = 1.005;
     let buyAnywaySellPriceLastSeenHours = 18; //the maximum hours that the buy anyway sell price must have last occurred
     for (let candle of candles) {
+      if (deleted) return;
       candle.open = Number(candle.open); //converting them all to numbers to speed up the backtesting so we dont have to convert it to a number there 10,000+ times
       candle.close = Number(candle.close);
       candle.high = Number(candle.high);
@@ -700,6 +728,7 @@ async function Backtesting(silent) {
       buyAnyway = false;
     let now = Date.now();
     while (buyPrice <= endPrice) {
+      if (deleted) return;
       //. we know that if this price hasnt been seen since maxHoursSinceLastProfit then we can skip it altogether to speed up the process because its very slow without it
       let priceRelevent = false;
       for (let candle of candles) {
@@ -722,8 +751,10 @@ async function Backtesting(silent) {
       }
       let profit = startProfit;
       while (profit <= endProfit) {
+        if (deleted) return;
         let stopLoss = startStopLoss;
         while (stopLoss >= endStopLoss) {
+          if (deleted) return;
           dataSets++;
           let sellPrice = buyPrice * profit;
           let totalProfit = 1;
@@ -856,7 +887,7 @@ async function Backtesting(silent) {
             1000 /
             60 /
             60
-          ).toFixed(1)} hours ago`.blue
+          ).toFixed(1)} hours ago`
         );
     }
     if (
@@ -907,7 +938,7 @@ async function Backtesting(silent) {
   customLog(
     `Backtesting complete. ${GetDate()}. ${
       tradeParams.length
-    } tradeable pairs found: ${pairsFoundText}`.yellow
+    } tradeable pairs found: ${pairsFoundText}`
   );
   ExcludePairsWithActiveOrders(); // we dismiss pairs that have active orders because we are backtesting here to create a list of currently tradeable pairs, and if we allow pairs that are busy with active order to be included then it messes up our code which chooses only the top x 'best' pairs to trade because itll include pairs that are not currently tradeable because theyre busy already trading from before.
 
@@ -917,9 +948,9 @@ async function Backtesting(silent) {
   customLog(`Enough funds to buy ${tradeTopXOnly} pairs...`);
 
   ExcludeNonTopPairs();
-  // customLog(`tradeParams`.red)
+  // customLog(`tradeParams`)
   // customLog(tradeParams)
-  // customLog('dontTradePairs:'.red)
+  // customLog('dontTradePairs:')
   // customLog(dontTradePairs)
   MLinProgress = false;
   backtestCount++;
@@ -1020,6 +1051,7 @@ function SortTradeParamsByBestProfit() {
 }
 
 async function TryBacktesting(skipDelayCheck) {
+  if (deleted) return;
   if (!skipDelayCheck && Date.now() - lastML < 15 * 60 * 1000) return; //. but still dont do it if it was less than x minutes ago to prevent startup spam
   let silent = false;
   if (Date.now() - lastNonSilentML < 12 * 60 * 60 * 1000) silent = true;
@@ -1040,8 +1072,10 @@ async function TryBacktesting(skipDelayCheck) {
 // }
 
 async function DailyStats(pair) {
+  if (deleted) return;
   let _pair = pair ? pair.replace("_", "") : undefined;
   while (true) {
+    if (deleted) return;
     let dailyStats;
     client
       .dailyStats({
@@ -1059,7 +1093,9 @@ async function DailyStats(pair) {
 }
 
 async function CancelOrder(object) {
+  if (deleted) return;
   while (true) {
+    if (deleted) return;
     let cancel = await client
       .cancelOrder(object)
       .catch(reason => customLog(`CancelOrder: ${reason}`));
@@ -1068,6 +1104,7 @@ async function CancelOrder(object) {
 }
 
 async function Order(pair, quantity, price, side, maxTries) {
+  if (deleted) return;
   if (maxTries === undefined) maxTries = 999; //was 15 but i upped it because our internet is cutting out right now due to rain
   let _pair = pair.replace("_", "");
   let hasFunds = true;
@@ -1075,6 +1112,7 @@ async function Order(pair, quantity, price, side, maxTries) {
   price = PriceDecimals(pair, price);
   let tries = 0;
   while (true) {
+    if (deleted) return;
     let order = await client
       .order({
         symbol: _pair,
@@ -1105,7 +1143,7 @@ async function Order(pair, quantity, price, side, maxTries) {
     //. give it a few good tries before letting an error stop it
     if (tries > maxTries) {
       if (!hasFunds) {
-        customLog(`${pair} ${side} MAX TRIES EXCEEDED`.red);
+        customLog(`${pair} ${side} MAX TRIES EXCEEDED`);
         return errors.insufficientFunds;
       }
     }
@@ -1120,8 +1158,10 @@ async function Order(pair, quantity, price, side, maxTries) {
 }
 
 async function GetFundsOf(pair1) {
+  if (deleted) return;
   let accountInfo;
   while (true) {
+    if (deleted) return;
     accountInfo = await client
       .accountInfo({
         recvWindow: 59999
@@ -1130,7 +1170,7 @@ async function GetFundsOf(pair1) {
     if (accountInfo) {
       break;
     } else {
-      customLog(`Account info not found. Retrying.`.yellow);
+      customLog(`Account info not found. Retrying.`);
       await sleep(500);
     }
   }
@@ -1142,6 +1182,7 @@ async function GetFundsOf(pair1) {
 }
 
 function SetHasActiveOrders(pair, status) {
+  if (deleted) return;
   let _pair = pair.replace("_", "");
   if (status == false) {
     activeOrders.remove(_pair);
@@ -1153,6 +1194,7 @@ function SetHasActiveOrders(pair, status) {
 }
 
 async function TradeLoop(pair) {
+  if (deleted) return;
   //customLog(`Trade Loop started on ${pair}`)
   let _pair = pair.replace("_", "");
   let pair1 = pair.split("_")[0];
@@ -1164,11 +1206,13 @@ async function TradeLoop(pair) {
   let _baseQuantity = baseQuantity;
   let priceDecimals = GetPriceDecimals(pair);
   start: while (true) {
+    if (deleted) return;
     SetHasActiveOrders(pair, false);
     await sleep(5000);
     await TryBacktesting();
     //this just means Backtesting decided not to trade this pair at this time
     while (!IsTradeable(pair) || !TradeParamsContains(pair)) {
+      if (deleted) return;
       await sleep(500);
     }
     let dailyStats = await DailyStats(pair);
@@ -1199,14 +1243,13 @@ async function TradeLoop(pair) {
       await sleep(hours * 60 * 60 * 1000);
       continue start;
     }
-    customLog(
-      `${pair} buy order placed @ $${buyPrice}. date: ${GetDate()}`.green
-    );
+    customLog(`${pair} buy order placed @ $${buyPrice}. date: ${GetDate()}`);
     SetHasActiveOrders(pair, true);
 
     //* wait for it to be filled
     let checkBuyOrder;
     while (true) {
+      if (deleted) return;
       await sleep(5000);
       checkBuyOrder = await client
         .getOrder({
@@ -1224,6 +1267,7 @@ async function TradeLoop(pair) {
           if (Date.now() - checkBuyOrder.time > timeLimit) {
             let cancelOrder;
             while (true) {
+              if (deleted) return;
               cancelOrder = await client
                 .cancelOrder({
                   symbol: _pair,
@@ -1234,9 +1278,7 @@ async function TradeLoop(pair) {
                   //customLog(`${reason}`)
                 });
               if (cancelOrder && cancelOrder.orderId) {
-                customLog(
-                  `${pair} buy order expired. date: ${GetDate()}`.magenta
-                );
+                customLog(`${pair} buy order expired. date: ${GetDate()}`);
                 await sleep(5000);
                 continue start; //go to the beginning and try the whole process over again
               }
@@ -1250,6 +1292,7 @@ async function TradeLoop(pair) {
     //* get the actual executed buy price because the one returned above by getOrder is not the executed price but just the price we told it to buy at
     let buyResults;
     while (true) {
+      if (deleted) return;
       await sleep(5000);
       //. trades will be an array filled with objects representing each trade
       let trades = await client
@@ -1299,13 +1342,14 @@ async function TradeLoop(pair) {
         100
       ).toFixed(3)}% difference. stop loss ${stopLossDisplay.toFixed(
         2
-      )}%. quantity: ${sellQuantity}. date: ${GetDate()}`.green
+      )}%. quantity: ${sellQuantity}. date: ${GetDate()}`
     );
 
     //* wait for it to be filled
     let stopLossFirstObserved = 0;
     let checkSellOrder;
     while (true) {
+      if (deleted) return;
       await sleep(20000 + Math.random() * 20000);
       dailyStats = await DailyStats(pair);
       checkSellOrder = undefined; // clear the old one
@@ -1316,7 +1360,7 @@ async function TradeLoop(pair) {
           recvWindow: 59999
         })
         .catch(reason => {
-          customLog(`${pair} WaitFill: ${reason}`.red);
+          customLog(`${pair} WaitFill: ${reason}`);
           if (checkSellOrder) customLog(`orderId: ${checkSellOrder.orderId}`);
         });
       if (checkSellOrder && checkSellOrder.status === "FILLED") break;
@@ -1349,7 +1393,7 @@ async function TradeLoop(pair) {
                 recvWindow: 59999
               });
               if (cancel) {
-                customLog(`${pair} STOP LOSS TRIGGERED. SELLING.`.red);
+                customLog(`${pair} STOP LOSS TRIGGERED. SELLING.`);
                 quantity =
                   Number(checkSellOrder.origQty) -
                   Number(checkSellOrder.executedQty);
@@ -1369,11 +1413,12 @@ async function TradeLoop(pair) {
       }
     }
     await sleep(5000);
-    //customLog(`${pair}: DEBUG 1`.red) //! DEBUG
+    //customLog(`${pair}: DEBUG 1`) //! DEBUG
 
     //* get the actual executed sell price because the one returned above by getOrder is not the executed price but just the price we told it to sell at
     let sellResults;
     while (true) {
+      if (deleted) return;
       await sleep(15000);
       //. trades will be an array filled with objects representing each trade
       let trades = await client
@@ -1405,7 +1450,7 @@ async function TradeLoop(pair) {
       }. date: ${GetDate()}. profit: ${((profit - 1) * 100).toFixed(
         3
       )}%. quantity: ${quantity}. total trades this session on all pairs: ${totalFilledSells} (${totalFilledSells -
-        totalLosingTrades} winning, ${totalLosingTrades} losing)`.green
+        totalLosingTrades} winning, ${totalLosingTrades} losing)`
     );
     AppendHistory(
       pair,

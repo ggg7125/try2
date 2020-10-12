@@ -1,6 +1,9 @@
 import Vue from "vue";
+import VueChatScroll from "vue-chat-scroll";
+Vue.use(VueChatScroll);
 import App from "./App.vue";
 import router from "./router";
+const colors = require("colors");
 
 const { ipcRenderer } = window.require("electron");
 console.log(ipcRenderer.sendSync("synchronous-message", "sync ping"));
@@ -19,8 +22,13 @@ ipcRenderer.on("bot-start-status", (event, data) => {
   store.botRunning = data;
 });
 
+let maxOutputLines = Infinity;
+
 ipcRenderer.on(`console-log`, (event, data) => {
-  console.log(data); // TODO: we dont really want to console log this, we want to show it in our own logging element on the frontend that looks nice for the user to see
+  store.mainOutputArray.push(data);
+  store.mainOutputArray = store.mainOutputArray.slice(
+    Math.max(store.mainOutputArray.length - maxOutputLines, 0)
+  );
 });
 
 ipcRenderer.on("asynchronous-reply", (event, arg) => {
@@ -39,7 +47,8 @@ let store = {
   settings: {
     apiKey: "",
     apiSecret: ""
-  }
+  },
+  mainOutputArray: [{ text: "App Started.<br>", color: "rgb(255,255,255)" }]
 };
 
 ipcRenderer.send("send-initial-settings", store.settings);
